@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#38108b">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ashraf.ASNM">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Ashraf.ASNM — ব্যক্তিগত হিসাব</title>
+<style>
+:root{--purple:#4d18b7;--dark:#230b58;--bg:#f5f2fc;--green:#16834b;--red:#d23b62;--text:#211638;--muted:#786e8d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,"Noto Sans Bengali","Arial",sans-serif}
+button,input,select,textarea{font:inherit}button{border:0;cursor:pointer}
+header{background:linear-gradient(135deg,#240a61,#5b20ca);color:#fff;padding:20px 18px 24px;border-radius:0 0 24px 24px}
+.top{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:800;font-size:24px;letter-spacing:.2px}.sub{opacity:.8;font-size:13px}
+.container{max-width:720px;margin:auto;padding:14px 14px 92px}
+.balance{margin-top:18px;background:#fff;color:var(--text);border-radius:18px;padding:18px;box-shadow:0 8px 24px #16003b20}
+.balance small{color:var(--muted)}.amount{font-size:30px;font-weight:800;margin:6px 0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.tile{background:#fff;padding:14px;border-radius:16px;box-shadow:0 3px 12px #16003b0b}.tile .num{font-weight:750;font-size:18px;margin-top:5px}.income{color:var(--green)}.expense{color:var(--red)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:14px 0}.tabs button{padding:11px 4px;border-radius:12px;background:#e8e0fa;color:#4b2988;font-size:13px}.tabs button.active{background:var(--purple);color:white}
+.panel{background:#fff;border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 3px 12px #16003b0b}.panel h3{margin:0 0 12px;font-size:17px}
+.row{display:flex;gap:9px}.row>*{flex:1;min-width:0}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid #e3d9f5;border-radius:11px;padding:11px;background:#fff;color:var(--text);outline:none}
+textarea{min-height:92px;resize:vertical}
+.primary{width:100%;padding:13px;background:var(--purple);color:white;border-radius:12px;font-weight:700;margin-top:12px}.secondary{background:#eee8fb;color:#4b2988;padding:10px;border-radius:10px}.danger{background:#ffe8ef;color:#a71d45;padding:9px 11px;border-radius:10px}
+.tx{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #eee;padding:12px 0}.tx:last-child{border-bottom:0}.txname{font-weight:650}.txmeta{font-size:12px;color:var(--muted);margin-top:3px}.txright{text-align:right;white-space:nowrap;font-weight:700}
+.note{background:#fff;border:1px solid #eee;border-radius:13px;padding:13px;margin:9px 0}.note small{color:var(--muted)}.note p{white-space:pre-wrap;margin:7px 0}
+.hidden{display:none!important}.empty{color:var(--muted);text-align:center;padding:22px 10px}.foot{font-size:12px;color:var(--muted);text-align:center;margin:18px 0}
+.lock{position:fixed;inset:0;background:linear-gradient(145deg,#200653,#4b15a6);z-index:10;display:flex;align-items:center;justify-content:center;padding:22px;color:#fff}.lockcard{width:min(420px,100%);text-align:center}.locklogo{font-size:46px}.lockcard h1{margin:5px}.lockcard p{opacity:.8}.lockcard input{background:#fff;color:#222;text-align:center;font-size:22px;letter-spacing:6px;max-width:260px;margin:12px auto}.lockcard button{max-width:260px;margin:10px auto}.lockmsg{min-height:24px;color:#ffd8e4;font-size:13px}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#24105c;color:white;padding:10px 15px;border-radius:12px;display:none;z-index:20}
+@media(min-width:600px){.container{padding-left:22px;padding-right:22px}.tiles{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div id="lock" class="lock">
+ <div class="lockcard">
+  <div class="locklogo">💜💰</div><h1>Ashraf.ASNM</h1><p id="lockhint">নিজের হিসাব নিরাপদে রাখুন</p>
+  <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN / পাসওয়ার্ড" autocomplete="off">
+  <button class="primary" onclick="unlock()">খুলুন</button><div class="lockmsg" id="lockmsg"></div>
+ </div>
+</div>
+<header>
+ <div class="top"><div><div class="brand">💜 Ashraf.ASNM</div><div class="sub">আপনার ব্যক্তিগত হিসাব</div></div><button class="secondary" onclick="showSettings()" title="সেটিংস">⚙️</button></div>
+ <div class="balance"><small>বর্তমান অবশিষ্ট ব্যালেন্স</small><div class="amount" id="balance">৳ 0</div><small id="monthlabel"></small></div>
+ <div class="tiles">
+  <div class="tile"><small>মোট ইনকাম</small><div class="num income" id="income">৳ 0</div></div>
+  <div class="tile"><small>মোট খরচ</small><div class="num expense" id="expense">৳ 0</div></div>
+  <div class="tile"><small>এই মাসের ব্যালেন্স</small><div class="num" id="monthbalance">৳ 0</div></div>
+ </div>
+</header>
+<main class="container">
+ <div class="tabs">
+  <button class="active" data-tab="home" onclick="tab('home',this)">🏠 হোম</button>
+  <button data-tab="add" onclick="tab('add',this)">➕ হিসাব</button>
+  <button data-tab="notes" onclick="tab('notes',this)">📝 নোট</button>
+  <button data-tab="report" onclick="tab('report',this)">📊 রিপোর্ট</button>
+ </div>
+ <section id="home">
+  <div class="panel"><h3>সাম্প্রতিক লেনদেন</h3><div id="recent"></div><button class="secondary" onclick="tab('add')">+ নতুন হিসাব যোগ করুন</button></div>
+ </section>
+ <section id="add" class="hidden">
+  <div class="panel"><h3>লেনদেন যোগ করুন</h3>
+   <div class="row"><button id="incomeBtn" class="secondary" onclick="setType('income')">⬆️ ইনকাম</button><button id="expenseBtn" class="secondary" onclick="setType('expense')">⬇️ খরচ</button></div>
+   <label>পরিমাণ (টাকা)</label><input id="amount" type="number" min="0" step="0.01" placeholder="পরিমাণ লিখুন">
+   <label>ক্যাটাগরি</label><select id="category"></select>
+   <label>তারিখ</label><input id="date" type="date">
+   <label>বিবরণ / নোট (ঐচ্ছিক)</label><textarea id="description" placeholder="যেমন: বাজার, বেতন, বিল..."></textarea>
+   <button class="primary" onclick="addTransaction()">সংরক্ষণ করুন</button>
+  </div>
+ </section>
+ <section id="notes" class="hidden">
+  <div class="panel"><h3>📝 ব্যক্তিগত নোট</h3><label>নোটের শিরোনাম</label><input id="noteTitle" placeholder="শিরোনাম লিখুন"><label>নোট</label><textarea id="noteBody" placeholder="আপনার কথা লিখুন..."></textarea><button class="primary" onclick="addNote()">নোট সংরক্ষণ</button></div><div id="noteList"></div>
+ </section>
+ <section id="report" class="hidden">
+  <div class="panel"><h3>📊 হিসাবের রিপোর্ট</h3><label>মাস নির্বাচন</label><input id="reportMonth" type="month" onchange="renderReport()"><div id="reportSummary"></div><div id="reportCategories"></div></div>
+  <div class="panel"><h3>ডাটা ব্যাকআপ</h3><p class="sub" style="color:var(--muted)">আপনার হিসাব একটি ফাইলে সংরক্ষণ বা আগের ব্যাকআপ ফিরিয়ে আনুন।</p><button class="primary" onclick="exportBackup()">⬇️ ব্যাকআপ ডাউনলোড</button><label>ব্যাকআপ ফাইল থেকে ফিরিয়ে আনুন</label><input type="file" id="restoreFile" accept="application/json" onchange="restoreBackup(event)"><button class="secondary" onclick="exportCSV()">📄 CSV হিসাব ডাউনলোড</button></div>
+ </section>
+ <section id="settings" class="hidden">
+  <div class="panel"><h3>⚙️ সেটিংস</h3><label>নতুন PIN / পাসওয়ার্ড</label><input id="newPin" type="password" maxlength="12" placeholder="নতুন PIN বা পাসওয়ার্ড"><button class="primary" onclick="changePin()">পাসওয়ার্ড পরিবর্তন</button><hr style="border:0;border-top:1px solid #eee;margin:16px 0"><button class="secondary" onclick="exportBackup()">ব্যাকআপ ডাউনলোড</button><button class="danger" style="width:100%;margin-top:10px" onclick="logout()">লক করুন</button></div>
+ </section>
+ <div class="foot">আপনার ডাটা এই ব্রাউজারের ডিভাইসেই রাখা হয়। নিয়মিত ব্যাকআপ রাখুন।</div>
+</main>
+<div id="toast"></div>
+<script>
+const KEY='addaa_data_v1', PINKEY='addaa_pin_v1';
+let data={tx:[],notes:[]}, type='income';
+const categories={income:['বেতন','ব্যবসা','ফ্রিল্যান্স','উপহার','অন্যান্য আয়'],expense:['খাবার','বাজার','যাতায়াত','বিল','কেনাকাটা','স্বাস্থ্য','শিক্ষা','বাড়ি','অন্যান্য খরচ']};
+const fmt=n=>'৳ '+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function load(){try{data=JSON.parse(localStorage.getItem(KEY))||{tx:[],notes:[]};if(!data.tx)data.tx=[];if(!data.notes)data.notes=[]}catch{data={tx:[],notes:[]}}}
+function monthNow(){return new Date().toISOString().slice(0,7)}
+function bnDate(d){try{return new Date(d+'T12:00:00').toLocaleDateString('bn-BD')}catch{return d}}
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function initPin(){if(!localStorage.getItem(PINKEY)){document.getElementById('lockhint').textContent='প্রথমবার ব্যবহার: একটি PIN / পাসওয়ার্ড সেট করুন';document.querySelector('#lock button').textContent='PIN সেট করে শুরু করুন'} }
+function unlock(){let p=document.getElementById('pin').value;if(!p){document.getElementById('lockmsg').textContent='PIN / পাসওয়ার্ড লিখুন';return}let saved=localStorage.getItem(PINKEY);if(!saved){localStorage.setItem(PINKEY,p);openApp()}else if(p===saved){openApp()}else{document.getElementById('lockmsg').textContent='পাসওয়ার্ড সঠিক নয়, আবার চেষ্টা করুন';document.getElementById('pin').value=''}}
+function openApp(){document.getElementById('lock').classList.add('hidden');load();render();document.getElementById('date').value=new Date().toISOString().slice(0,10);document.getElementById('reportMonth').value=monthNow();setType('income')}
+function logout(){document.getElementById('lock').classList.remove('hidden');document.getElementById('pin').value='';document.getElementById('lockmsg').textContent=''}
+function changePin(){let p=document.getElementById('newPin').value;if(p.length<4){toast('কমপক্ষে ৪ অক্ষর/সংখ্যা দিন');return}localStorage.setItem(PINKEY,p);document.getElementById('newPin').value='';toast('পাসওয়ার্ড পরিবর্তন হয়েছে')}
+function tab(name,btn){['home','add','notes','report','settings'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==name));document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='notes')renderNotes();if(name==='report')renderReport()}
+function showSettings(){tab('settings')}
+function setType(t){type=t;document.getElementById('incomeBtn').style.background=t==='income'?'#d9f6e5':'#eee8fb';document.getElementById('incomeBtn').style.color=t==='income'?'#16834b':'#4b2988';document.getElementById('expenseBtn').style.background=t==='expense'?'#ffe2eb':'#eee8fb';document.getElementById('expenseBtn').style.color=t==='expense'?'#d23b62':'#4b2988';let sel=document.getElementById('category');sel.innerHTML=categories[t].map(c=>`<option>${c}</option>`).join('')}
+function addTransaction(){let amount=Number(document.getElementById('amount').value);if(!(amount>0)){toast('সঠিক পরিমাণ লিখুন');return}data.tx.unshift({id:Date.now(),type,amount,category:document.getElementById('category').value,date:document.getElementById('date').value||new Date().toISOString().slice(0,10),description:document.getElementById('description').value.trim()});document.getElementById('amount').value='';document.getElementById('description').value='';save();toast('হিসাব সংরক্ষিত হয়েছে');tab('home')}
+function delTx(id){if(confirm('এই লেনদেনটি মুছে ফেলবেন?')){data.tx=data.tx.filter(t=>t.id!==id);save()}}
+function render(){let totalIn=data.tx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),totalOut=data.tx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0),bal=totalIn-totalOut,month=monthNow(),mt=data.tx.filter(t=>t.date?.startsWith(month)),mi=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),mo=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+document.getElementById('balance').textContent=fmt(bal);document.getElementById('income').textContent=fmt(totalIn);document.getElementById('expense').textContent=fmt(totalOut);document.getElementById('monthbalance').textContent=fmt(mi-mo);document.getElementById('monthlabel').textContent='সর্বমোট '+data.tx.length.toLocaleString('bn-BD')+' টি লেনদেন';
+let recent=data.tx.slice(0,12);document.getElementById('recent').innerHTML=recent.length?recent.map(txHtml).join(''):'<div class="empty">এখনো কোনো হিসাব যোগ করা হয়নি।</div>';renderNotes()}
+function txHtml(t){return `<div class="tx"><div><div class="txname">${esc(t.category)}</div><div class="txmeta">${bnDate(t.date)}${t.description?' · '+esc(t.description):''}</div></div><div class="txright ${t.type==='income'?'income':'expense'}">${t.type==='income'?'+':'−'} ${fmt(t.amount)}<div><button class="danger" style="font-size:11px;margin-top:4px" onclick="delTx(${t.id})">মুছুন</button></div></div></div>`}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addNote(){let title=document.getElementById('noteTitle').value.trim(),body=document.getElementById('noteBody').value.trim();if(!title&&!body){toast('নোট লিখুন');return}data.notes.unshift({id:Date.now(),title:title||'নোট',body,date:new Date().toISOString().slice(0,10)});document.getElementById('noteTitle').value='';document.getElementById('noteBody').value='';save();toast('নোট সংরক্ষিত')}
+function delNote(id){if(confirm('নোটটি মুছবেন?')){data.notes=data.notes.filter(n=>n.id!==id);save()}}
+function renderNotes(){let el=document.getElementById('noteList');if(!el)return;el.innerHTML=data.notes.length?data.notes.map(n=>`<div class="note"><b>${esc(n.title)}</b><small style="float:right">${bnDate(n.date)}</small><p>${esc(n.body)}</p><button class="danger" onclick="delNote(${n.id})">মুছুন</button></div>`).join(''):'<div class="empty">কোনো নোট নেই।</div>'}
+function renderReport(){let m=document.getElementById('reportMonth').value||monthNow(),tx=data.tx.filter(t=>t.date?.startsWith(m)),i=tx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),e=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);document.getElementById('reportSummary').innerHTML=`<div class="tiles"><div class="tile"><small>ইনকাম</small><div class="num income">${fmt(i)}</div></div><div class="tile"><small>খরচ</small><div class="num expense">${fmt(e)}</div></div></div><div class="tile" style="margin-top:10px"><small>অবশিষ্ট (এই মাস)</small><div class="num">${fmt(i-e)}</div></div><p>মোট লেনদেন: ${tx.length.toLocaleString('bn-BD')} টি</p>`;
+let cats={};tx.filter(t=>t.type==='expense').forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);document.getElementById('reportCategories').innerHTML='<h4>খরচের ক্যাটাগরি</h4>'+ (Object.keys(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<div class="tx"><div>${esc(c)}</div><b class="expense">${fmt(v)}</b></div>`).join(''):'<div class="empty">এই মাসে খরচ নেই</div>')}
+function exportBackup(){let blob=new Blob([JSON.stringify({app:'Ashraf.ASNM',version:1,exportedAt:new Date().toISOString(),data},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='addaa-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function restoreBackup(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let obj=JSON.parse(r.result);if(!obj.data||!Array.isArray(obj.data.tx)||!Array.isArray(obj.data.notes))throw 0;if(confirm('বর্তমান ডাটার সাথে ব্যাকআপ ডাটা প্রতিস্থাপন করবেন?')){data=obj.data;save();toast('ব্যাকআপ ফিরিয়ে আনা হয়েছে')}}catch{toast('ফাইলটি সঠিক ব্যাকআপ নয়')}};r.readAsText(f)}
+function exportCSV(){let rows=[['ধরন','পরিমাণ','ক্যাটাগরি','তারিখ','বিবরণ'],...data.tx.map(t=>[t.type==='income'?'ইনকাম':'খরচ',t.amount,t.category,t.date,t.description||''])];let csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='addaa-transactions.csv';a.click();URL.revokeObjectURL(a.href)}
+initPin();
+document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+</script>
+</body></html>

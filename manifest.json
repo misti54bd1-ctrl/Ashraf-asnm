@@ -1,0 +1,11 @@
+{
+  "name": "Ashraf.ASNM - Personal Accounts",
+  "short_name": "Ashraf.ASNM",
+  "description": "Offline personal income, expense, balance and notes app",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f2fc",
+  "theme_color": "#38108b",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
